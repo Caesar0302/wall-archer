@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>城墙弓箭手</title>
+<style>
+body{margin:0;background:#111;color:#fff;overflow:hidden;font-family:sans-serif}
+canvas{display:block;margin:auto;background:#222}
+</style>
+</head>
+<body>
+<canvas id="game" width="900" height="500"></canvas>
+<script>
+const c=document.getElementById("game"),ctx=c.getContext("2d");
+
+let angle=-0.2;
+let arrows=[];
+let monsters=[];
+let wallHP=100;
+let gold=0;
+let level=1;
+
+c.addEventListener("mousemove",e=>{
+ const r=c.getBoundingClientRect();
+ const y=e.clientY-r.top;
+ angle=(y-230)/120;
+});
+
+function shoot(){
+ arrows.push({x:170,y:160,dx:8,dy:Math.sin(angle)*8});
+}
+setInterval(shoot,600);
+
+function spawn(){
+ monsters.push({x:850,y:350,hp:3+level});
+}
+setInterval(spawn,1500);
+
+function update(){
+ arrows.forEach(a=>{a.x+=a.dx;a.y+=a.dy});
+ monsters.forEach(m=>m.x-=1.2);
+
+ arrows.forEach((a,i)=>{
+  monsters.forEach((m,j)=>{
+   if(Math.abs(a.x-m.x)<25&&Math.abs(a.y-m.y)<25){
+    m.hp--; arrows.splice(i,1);
+    if(m.hp<=0){monsters.splice(j,1);gold+=10;}
+   }
+  })
+ });
+
+ monsters.forEach((m,i)=>{
+  if(m.x<120){wallHP-=5;monsters.splice(i,1)}
+ });
+}
+
+function draw(){
+ ctx.clearRect(0,0,c.width,c.height);
+
+ // ground
+ ctx.fillStyle="#654321";ctx.fillRect(0,400,900,100);
+
+ // wall
+ ctx.fillStyle="#888";ctx.fillRect(40,180,100,220);
+ ctx.fillStyle="#ddd";ctx.fillRect(70,120,40,80);
+
+ // archer
+ ctx.fillStyle="#f5c";ctx.fillRect(100,100,30,50);
+
+ // arrows
+ ctx.fillStyle="#ff0";
+ arrows.forEach(a=>ctx.fillRect(a.x,a.y,15,3));
+
+ // monsters
+ ctx.fillStyle="red";
+ monsters.forEach(m=>{
+  ctx.fillRect(m.x,m.y,30,50);
+  ctx.fillStyle="white";
+  ctx.fillText(m.hp,m.x,m.y-5);
+  ctx.fillStyle="red";
+ });
+
+ ctx.fillStyle="white";
+ ctx.font="20px Arial";
+ ctx.fillText("城墙血量:"+wallHP,20,30);
+ ctx.fillText("金币:"+gold+" 等级:"+level,20,60);
+
+ if(wallHP<=0){
+  ctx.fillText("城墙失守!",400,250);
+ }
+ requestAnimationFrame(loop);
+}
+
+function loop(){update();draw();}
+loop();
+</script>
+</body>
+</html>
